@@ -74,8 +74,10 @@ impl ProgressBar {
         }
     }
 
-    pub fn tick(&mut self, progress: usize) {
-        clearscreen::clear().expect("Failed to clear screen");
+    pub fn tick(&mut self, progress: usize, y_pos: usize) {
+        // Move cursor to where to draw the progress bar
+        print!("\x1b[{};{}H", y_pos, 0);
+        io::stdout().flush().unwrap();
 
         let percent = (progress * 100) / self.size;
         self.curr = (percent * self.len) / 100;
@@ -126,7 +128,7 @@ impl ProgressBar {
             unit = "MB/s";
         }
 
-        println!(
+        print!(
             "{}%  elapsed {:02}:{:02}  <  ETA {:02}:{:02}  @ {:.2} {}",
             percent,
             elapsed.as_secs() / 60,
@@ -148,4 +150,35 @@ impl ProgressBar {
         self.fill_color = fill.ch();
         self.empty_color = emp.ch();
     }
+}
+
+
+
+/// Clears the screen
+pub fn clear_screen() -> std::io::Result<()> {
+    let mut stdout = std::io::stdout();
+
+    stdout.write("\x1b[2J".as_bytes())?;
+
+    Ok(())
+}
+
+
+/// Hides the cursor
+pub fn hide_cursor() -> std::io::Result<()> {
+    let mut stdout = std::io::stdout();
+
+    stdout.write("\x1b[?25l".as_bytes())?;
+
+    Ok(())
+}
+
+
+/// Show the cursor
+pub fn show_cursor() -> std::io::Result<()> {
+    let mut stdout = std::io::stdout();
+
+    stdout.write("\x1b[?25h".as_bytes())?;
+
+    Ok(())
 }
