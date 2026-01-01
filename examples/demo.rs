@@ -1,10 +1,11 @@
-use rustybar::ProgressBar;
+use rustybar::*;
+
 use std::{thread, time::Duration};
 
 fn main() {
     let total_size = 50_000;
 
-    let mut bar = ProgressBar::new("Downloading", 40, total_size);
+    let mut bar = ProgressBar::new("Downloading bar 1", 40, total_size);
 
     let mut downloaded = 0;
 
@@ -15,7 +16,6 @@ fn main() {
         }
 
         bar.tick(downloaded);
-
         thread::sleep(Duration::from_millis(80));
     }
 }
