@@ -1,45 +1,66 @@
+use crossterm::{
+    ExecutableCommand,
+    cursor::{self, MoveTo},
+    terminal::{disable_raw_mode, enable_raw_mode},
+};
 use std::io::{self, Write};
 use std::sync::Once;
 use std::time::Instant;
-use crossterm::{
-    cursor::{self, MoveTo},
-    terminal::{enable_raw_mode, disable_raw_mode},
-    ExecutableCommand,
-};
 
 const UNICODE_BAR_FULL_CHARS: &[char] = &['█', '#', '=', '━'];
 const UNICODE_BAR_EMPTY_CHARS: &[char] = &['█', ' ', '-', '━'];
 
 #[allow(dead_code)]
-pub enum FillStyle { Solid, Hash, Equal, Thin }
+pub enum FillStyle {
+    Solid,
+    Hash,
+    Equal,
+    Thin,
+}
 
 #[allow(dead_code)]
-pub enum EmptyStyle { Solid, Space, Dash, Thin }
+pub enum EmptyStyle {
+    Solid,
+    Space,
+    Dash,
+    Thin,
+}
 
 #[allow(dead_code)]
 #[derive(Copy, Clone)]
-pub enum Color { Red, Green, Yellow, Gray, Cyan, Reset }
+pub enum Color {
+    Red,
+    Green,
+    Yellow,
+    Gray,
+    Cyan,
+    Reset,
+}
 
 impl Color {
     #[inline(always)]
     const fn ch(self) -> &'static str {
         match self {
-            Color::Red    => "\x1b[31m",
-            Color::Green  => "\x1b[32m",
+            Color::Red => "\x1b[31m",
+            Color::Green => "\x1b[32m",
             Color::Yellow => "\x1b[33m",
-            Color::Gray   => "\x1b[90m",
-            Color::Cyan   => "\x1b[36m",
-            Color::Reset  => "\x1b[0m",
+            Color::Gray => "\x1b[90m",
+            Color::Cyan => "\x1b[36m",
+            Color::Reset => "\x1b[0m",
         }
     }
 }
 
 impl FillStyle {
-    fn ch(self) -> char { UNICODE_BAR_FULL_CHARS[self as usize] }
+    fn ch(self) -> char {
+        UNICODE_BAR_FULL_CHARS[self as usize]
+    }
 }
 
 impl EmptyStyle {
-    fn ch(self) -> char { UNICODE_BAR_EMPTY_CHARS[self as usize] }
+    fn ch(self) -> char {
+        UNICODE_BAR_EMPTY_CHARS[self as usize]
+    }
 }
 
 static INIT: Once = Once::new();
@@ -49,7 +70,9 @@ fn cursor_hide() {
     INIT.call_once(|| {
         enable_raw_mode().unwrap();
         let (_, row) = cursor::position().unwrap();
-        unsafe { NEXT_ROW = row; }
+        unsafe {
+            NEXT_ROW = row;
+        }
         io::stdout().execute(cursor::Hide).unwrap();
     });
 }
@@ -125,9 +148,13 @@ impl ProgressBar {
 
         print!("{} ", self.desc);
         print!("{}", self.fill_color);
-        for _ in 0..self.curr { print!("{}", self.fill_style); }
+        for _ in 0..self.curr {
+            print!("{}", self.fill_style);
+        }
         print!("{}", self.empty_color);
-        for _ in self.curr..self.len { print!("{}", self.empty_style); }
+        for _ in self.curr..self.len {
+            print!("{}", self.empty_style);
+        }
         print!("{} ", Color::Reset.ch());
 
         let mut disp_speed = speed;
