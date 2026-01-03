@@ -224,3 +224,21 @@ impl Drop for ProgressBar {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new() {
+        let bar = ProgressBar::new("Downloading", 50, 100);
+
+        assert_eq!(bar.desc, "Downloading");
+        assert_eq!(bar.len, 50);
+        assert_eq!(bar.size, 100);
+        assert_eq!(bar.curr, 0);
+
+        assert_eq!(bar.fill_style, FillStyle::Hash.ch());
+        assert_eq!(bar.empty_style, EmptyStyle::Dash.ch());
+    }
+}
