@@ -4,9 +4,14 @@ use crossterm::{
     cursor::{self, MoveTo},
     terminal::{disable_raw_mode, enable_raw_mode},
 };
-use std::io::{self, Write};
-use std::sync::Once;
-use std::time::Instant;
+use std::{
+    io::{self, Write},
+    sync::{
+        Once,
+        atomic::{AtomicU16, Ordering},
+    },
+    time::Instant,
+};
 
 const UNICODE_BAR_FULL_CHARS: &[char] = &['█', '#', '=', '━'];
 const UNICODE_BAR_EMPTY_CHARS: &[char] = &['█', ' ', '-', '━'];
@@ -72,15 +77,13 @@ impl EmptyStyle {
 }
 
 static INIT: Once = Once::new();
-static mut NEXT_ROW: u16 = 0;
+static NEXT_ROW: AtomicU16 = AtomicU16::new(0);
 
 fn cursor_hide() {
     INIT.call_once(|| {
         enable_raw_mode().unwrap();
         let (_, row) = cursor::position().unwrap();
-        unsafe {
-            NEXT_ROW = row;
-        }
+        NEXT_ROW.store(row, Ordering::Release);
         io::stdout().execute(cursor::Hide).unwrap();
     });
 }
@@ -88,7 +91,8 @@ fn cursor_hide() {
 fn cursor_restore() {
     let mut out = io::stdout();
     out.execute(cursor::Show).unwrap();
-    out.execute(MoveTo(0, unsafe { NEXT_ROW + 1 })).unwrap();
+    out.execute(MoveTo(0, NEXT_ROW.load(Ordering::Acquire) + 1))
+        .unwrap();
     disable_raw_mode().unwrap();
 }
 
@@ -125,12 +129,6 @@ impl ProgressBar {
             cursor_hide();
         }
 
-        let row;
-        unsafe {
-            row = NEXT_ROW;
-            NEXT_ROW += 1;
-        }
-
         Self {
             desc: desc.to_string(),
             len,
@@ -146,7 +144,7 @@ impl ProgressBar {
             fill_color: Color::Green.ch(),
             empty_color: Color::Gray.ch(),
 
-            row,
+            row: NEXT_ROW.fetch_add(1, Ordering::AcqRel),
             col: 0,
 
             term_mode,
