@@ -6,7 +6,7 @@ fn main() {
     let total_size = 20_000;
 
     let mut bar = ProgressBar::new("Downloading", 40, total_size);
-    bar.style(FillStyle::Solid, EmptyStyle::Solid);
+    bar.style(FillStyle::Thin, EmptyStyle::Thin);
     bar.gradient(Color::Yellow, Color::Red);
 
     let mut downloaded = 0;
@@ -17,7 +17,9 @@ fn main() {
             downloaded = total_size;
         }
 
-        bar.tick(downloaded);
+        if bar.tick(downloaded) {
+            break;
+        }
         thread::sleep(Duration::from_millis(80));
     }
 }

@@ -1,6 +1,7 @@
 # rustybar
 [![crates.io](https://img.shields.io/crates/v/rustybar.svg)](https://crates.io/crates/rustybar)
 [![docs.rs](https://docs.rs/rustybar/badge.svg)](https://docs.rs/rustybar)
+[![Build Status](https://github.com/ankushT369/rustybar/actions/workflows/rust.yml/badge.svg)](https://github.com/ankushT369/rustybar/actions?query=workflow%3ARust)
 
 
 **rustybar** is a small, dependency-light progress bar library for Rust that renders clean, modern-looking progress bars in the terminal.
