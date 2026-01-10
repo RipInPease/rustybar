@@ -8,4 +8,5 @@ readme = "README.md"
 
 
 [dependencies]
+console = "0.16.2"
 crossterm = "0.29.0"

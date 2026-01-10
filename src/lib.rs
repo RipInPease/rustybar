@@ -1,16 +1,12 @@
-use crossterm::{
-    ExecutableCommand,
-    cursor::{self, MoveTo},
-    event,
-    terminal::{disable_raw_mode, enable_raw_mode},
-};
+use console::{self, Term};
+use crossterm::event;
 
 use std::time::Duration;
 use std::{
     io::{self, IsTerminal, Write},
     sync::{
         Once,
-        atomic::{AtomicU16, Ordering},
+        atomic::{AtomicUsize, Ordering},
     },
     time::Instant,
 };
@@ -97,23 +93,20 @@ impl EmptyStyle {
 }
 
 static INIT: Once = Once::new();
-static NEXT_ROW: AtomicU16 = AtomicU16::new(0);
+static NEXT_ROW: AtomicUsize = AtomicUsize::new(0);
 
 fn cursor_hide() {
     INIT.call_once(|| {
-        enable_raw_mode().unwrap();
-        let (_, row) = cursor::position().unwrap();
-        NEXT_ROW.store(row, Ordering::Release);
-        io::stdout().execute(cursor::Hide).unwrap();
+        Term::stderr().hide_cursor().unwrap();
     });
 }
 
 fn cursor_restore() {
-    let mut out = io::stdout();
-    out.execute(cursor::Show).unwrap();
-    out.execute(MoveTo(0, NEXT_ROW.load(Ordering::Acquire) + 1))
+    let out = Term::stderr();
+    out.show_cursor().unwrap();
+    out.move_cursor_to(0, NEXT_ROW.load(Ordering::Acquire) + 1)
         .unwrap();
-    disable_raw_mode().unwrap();
+    //disable_raw_mode().unwrap();
 }
 
 pub struct ProgressBar {
@@ -131,8 +124,8 @@ pub struct ProgressBar {
     fill_color: &'static str,
     empty_color: &'static str,
 
-    row: u16,
-    col: u16,
+    row: usize,
+    col: usize,
 
     term_mode: TerminalMode,
 
@@ -143,7 +136,7 @@ pub struct ProgressBar {
 
 impl ProgressBar {
     pub fn new(desc: &str, len: usize, size: usize) -> Self {
-        let term_mode = if !io::stdout().is_terminal() {
+        let term_mode = if !io::stderr().is_terminal() {
             TerminalMode::Headless
         } else {
             TerminalMode::Interactive
@@ -192,9 +185,9 @@ impl ProgressBar {
         let eta_secs = (remaining as f64 / speed).max(0.0);
         let eta = std::time::Duration::from_secs_f64(eta_secs);
 
-        let mut out = io::stdout();
+        let out = Term::stderr();
         if self.term_mode == TerminalMode::Interactive {
-            out.execute(MoveTo(self.col, self.row)).unwrap();
+            out.move_cursor_to(self.col, self.row).unwrap();
         }
 
         print!("{} ", self.desc);
